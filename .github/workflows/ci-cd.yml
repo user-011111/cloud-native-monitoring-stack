@@ -1,0 +1,32 @@
+name: CI/CD Pipeline - Build & Push Docker Image
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout du code source
+        uses: actions/checkout@v4
+
+      - name: 2. Connexion à Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 3. Configuration de Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 4. Build et Push de l'image JBoss sur Docker Hub
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.jboss
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/jboss-monitoring-app:latest
