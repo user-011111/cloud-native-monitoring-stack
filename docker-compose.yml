@@ -1,19 +1,19 @@
 services:
-  # 1. Base de données PostgreSQL
+ # 1. Base de données PostgreSQL
   postgres_db:
     image: postgres:15-alpine
     container_name: postgres_db
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: myapp_db
+      POSTGRES_USER: monitoring_app
+      POSTGRES_PASSWORD: monitoring_pass_2026
+      POSTGRES_DB: monitoring_test
     ports:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - app-network
-
   # 2. Serveur d'applications JBoss (WildFly 26 - Compatible Java EE)
   jboss_app:
     build:
@@ -33,16 +33,15 @@ services:
     networks:
       - app-network
 
-  # 3. Collecteur de métriques pour PostgreSQL (CORRIGÉ : Image directe)
-  postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:latest
+  # 3. Collecteur de métriques pour PostgreSQL
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter
     container_name: postgres_exporter
     environment:
-      DATA_SOURCE_NAME: "postgresql://monitoring_app:change-me@postgres_db:5432/monitoring_test?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://monitoring_app:monitoring_pass_2026@postgres_db:5432/monitoring_test?sslmode=disable"
+      PG_EXPORTER_DISABLE_COLLECTORS: "wal"
     ports:
       - "9187:9187"
-    depends_on:
-      - postgres_db
     networks:
       - app-network
 
@@ -55,7 +54,8 @@ services:
     ports:
       - "9090:9090"
     depends_on:
-      - postgres-exporter
+      - jboss_app
+      - postgres_exporter
     networks:
       - app-network
 
@@ -71,6 +71,7 @@ services:
       - prometheus
     networks:
       - app-network
+
   # 6. Stockage des logs (Loki)
   loki:
     image: grafana/loki:latest
@@ -80,12 +81,12 @@ services:
     networks:
       - app-network
 
- # 7. Collecteur de logs (Promtail)
+  # 7. Collecteur de logs (Promtail)
   promtail:
     image: grafana/promtail:latest
     container_name: promtail
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # Accès direct aux logs via l'API Docker
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./promtail-config.yml:/etc/promtail/config.yml
     command: -config.file=/etc/promtail/config.yml
     networks:

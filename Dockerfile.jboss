@@ -8,14 +8,18 @@ ENV DB_HOST=postgres_db \
 
 USER root
 
-# Copie du driver PostgreSQL et de l'application dans le dossier de déploiement
+# Copier le driver et le fichier WAR
 COPY postgresql-42.7.3.jar /opt/jboss/wildfly/standalone/deployments/
 COPY monitor-test.war /opt/jboss/wildfly/standalone/deployments/
 
+# Ajuster les permissions
 RUN chown -R jboss:jboss /opt/jboss/wildfly/standalone/deployments/
 
 USER jboss
 
+# Configurer la DataSource au démarrage du build via JBoss CLI en mode embed
+RUN /opt/jboss/wildfly/bin/jboss-cli.sh --commands="embed-server --std-out=echo, /subsystem=datasources/data-source=MonitoringDS:add(jndi-name=java:jboss/datasources/MonitoringDS, connection-url=jdbc:postgresql://postgres_db:5432/monitoring_test, driver-name=postgresql-42.7.3.jar, user-name=monitoring_app, password=monitoring_pass_2026, enabled=true)"
+
 EXPOSE 8080 9990
 
-CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0"]ss
+CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0"]

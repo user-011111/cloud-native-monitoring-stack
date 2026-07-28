@@ -29,4 +29,4 @@ jobs:
           context: .
           file: ./Dockerfile.jboss
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/jboss-monitoring-app:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/cloud-native-monitoring-stack:latest
