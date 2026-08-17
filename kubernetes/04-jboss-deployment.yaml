@@ -30,7 +30,10 @@ spec:
             - name: DB_PORT
               value: "5432"
             - name: DB_NAME
-              value: "monitoring_test"
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-db
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
