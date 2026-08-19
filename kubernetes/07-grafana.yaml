@@ -26,7 +26,7 @@ spec:
         app: grafana
     spec:
       securityContext:
-        fsGroup: 472 # Requis pour que Grafana ait les droits d'écriture sur le volume
+        fsGroup: 472 # Requis pour que Grafana ait les droits d'écriture sur le volume persistant
       containers:
         - name: grafana
           image: grafana/grafana:latest
@@ -34,12 +34,28 @@ spec:
           ports:
             - containerPort: 3000
           volumeMounts:
+            # 1. Le montage de ton volume persistant d'origine
             - name: grafana-storage
               mountPath: /var/lib/grafana
+            # 2. Le montage du fichier de configuration du provider
+            - name: grafana-dashboard-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+            # 3. Le montage du dossier contenant ton dashboard en format JSON
+            - name: grafana-dashboards
+              mountPath: /etc/grafana/dashboards
       volumes:
+        # 1. Ton volume persistant d'origine
         - name: grafana-storage
           persistentVolumeClaim:
             claimName: grafana-pvc
+        # 2. Le volume lié au ConfigMap du provider
+        - name: grafana-dashboard-provider
+          configMap:
+            name: grafana-dashboard-provider
+        # 3. Le volume lié au ConfigMap de ton JSON
+        - name: grafana-dashboards
+          configMap:
+            name: grafana-dashboards
 ---
 apiVersion: v1
 kind: Service

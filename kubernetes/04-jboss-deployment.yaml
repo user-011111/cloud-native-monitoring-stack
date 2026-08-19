@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: jboss
-          image: user011111/cloud-native-monitoring-stack:latest
+          image: user011111/cloud-native-monitoring-stack:v5
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
