@@ -5,6 +5,14 @@ metadata:
   namespace: monitoring-app
 data:
   init-db.sql: |
+    -- 1. Création de la base de données et attribution des droits
+    CREATE DATABASE monitoring_test;
+    GRANT ALL PRIVILEGES ON DATABASE monitoring_test TO monitoring_app;
+
+    -- 2. Connexion explicite à la nouvelle base de données
+    \c monitoring_test;
+
+    -- 3. Création de la table dans la bonne base
     CREATE TABLE IF NOT EXISTS monitor_events (
         id SERIAL PRIMARY KEY,
         event_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

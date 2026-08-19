@@ -44,6 +44,32 @@ spec:
               subPath: data-v2
             - name: init-sql
               mountPath: /docker-entrypoint-initdb.d
+              
+        - name: postgres-exporter
+          image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9187
+              name: metrics
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-password
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-db
+            - name: DATA_SOURCE_NAME
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@localhost:5432/$(POSTGRES_DB)?sslmode=disable"
+              
       volumes:
         - name: postgres-storage
           persistentVolumeClaim:
@@ -61,7 +87,12 @@ spec:
   selector:
     app: postgres
   ports:
-    - protocol: TCP
+    - name: postgresdb
+      protocol: TCP
       port: 5432
       targetPort: 5432
+    - name: metrics
+      protocol: TCP
+      port: 9187
+      targetPort: 9187
   type: ClusterIP
